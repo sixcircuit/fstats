@@ -1,6 +1,6 @@
 # fstats - a file tree stats program
 
-## Installation
+### Installation
 
 Please read the section on global installation.
 
@@ -8,7 +8,7 @@ Please read the section on global installation.
 npm install -g fstats 
 ```
 
-**Global Installation**
+#### Global Installation
 
 You should be installing "globally" to your home directory without sudo:
 
@@ -16,7 +16,7 @@ Run this command: ```npm config set prefix ~/.npm-packages```
 
 Add this to your .bashrc or similar: ```export PATH=$HOME/.npm-packages/bin:$PATH```
 
-## Use (it's really easy)
+### Use (it's really easy)
 
 just run:
 
