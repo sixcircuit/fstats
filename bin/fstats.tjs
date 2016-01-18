@@ -55,9 +55,8 @@ function run(){
 
     var header = ["", "current"];
 
-    var add_last_header = _.once(function(){
-        header.push("last"); header.push("change");
-    });
+    var add_last_header = _.once(function(){ header.push("last"); header.push("change"); });
+    var add_max_header = _.once(function(){ header.push("max"); header.push("change"); });
 
     var data = [];
 
@@ -74,17 +73,32 @@ function run(){
             if(stat.last_run.change.raw === 0){
                 row.push("0");
             }else if(stat.last_run.change.raw > 0){
-                row.push(color.red(stat.last_run.change.human));
-            }else{
                 row.push(color.green(stat.last_run.change.human));
+            }else{
+                row.push(color.red(stat.last_run.change.human));
             }
         }
+
+        if(stat.max_run !== null){
+            add_max_header();
+
+            row.push(stat.max_run.value.human);
+
+            if(stat.max_run.change.raw === 0){
+                row.push("0");
+            }else if(stat.max_run.change.raw > 0){
+                row.push(color.green(stat.max_run.change.human));
+            }else{
+                row.push(color.red(stat.max_run.change.human));
+            }
+        }
+
         data.push(row);
     });
 
     data.unshift(header);
     var t = table(data, { 
-        align: [ 'l', 'r', 'r', 'r' ],
+        align: [ 'l', 'r', 'r', 'r', 'r', 'r' ],
         stringLength: function(s) { return color.strip(s).length; }
     });
 
