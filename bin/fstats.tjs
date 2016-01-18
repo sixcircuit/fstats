@@ -1,0 +1,98 @@
+"use strict";
+
+var _ = require("dry-underscore");
+var fstats = require('../lib');
+var table = require('text-table');
+
+var color = require('cli-color');
+
+process.on('uncaughtException', _.exit);
+
+var total_time = _.time("total time");
+
+var log = _.log;
+var log_level = "info";
+var verbose = false;
+
+function run(){
+
+    var args = process.argv.slice(2);
+
+    log.level(log_level);
+    verbose = log.verbose();
+
+    var err = null;
+
+    var print_help = false;
+    var read_only = false;
+
+    args = _.filter(args, function(arg){
+        if(_.lc(arg) === "-h"){ print_help = true; }
+        else if(_.lc(arg) === "-ro"){ read_only = true; }
+        else{ return(true); }
+    });
+
+    if(print_help){ 
+        _.stderr("usage: fstats [-h, -ro] [directory_name]");
+        _.exit(1);
+    }
+
+    var root = _.path.cwd();
+
+    if(args.length > 0){ root = _.last(args); }
+
+    var fs = fstats({ root: root, read_only: read_only });
+
+    await{ fs.compute(_.plumb(defer(var stats), _.exit)); }
+
+    var print_info = [
+        { key: "allocated", name: "size:" },
+        { key: "file_count", name: "files:" },
+        { key: "link_count", name: "links:" },
+        { key: "dir_count", name: "dirs:" },
+        { key: "files_per_dir", name: "files / dir:" },
+    ];
+
+    var header = ["", "current"];
+
+    var add_last_header = _.once(function(){
+        header.push("last"); header.push("change");
+    });
+
+    var data = [];
+
+    _.each(print_info, function(info, key){
+        var stat = stats[info.key];
+
+        var row = [info.name, stat.current.value.human];
+
+        if(stat.last_run !== null){
+            add_last_header();
+
+            row.push(stat.last_run.value.human);
+
+            if(stat.last_run.change.raw === 0){
+                row.push("0");
+            }else if(stat.last_run.change.raw > 0){
+                row.push(color.red(stat.last_run.change.human));
+            }else{
+                row.push(color.green(stat.last_run.change.human));
+            }
+        }
+        data.push(row);
+    });
+
+    data.unshift(header);
+    var t = table(data, { 
+        align: [ 'l', 'r', 'r', 'r' ],
+        stringLength: function(s) { return color.strip(s).length; }
+    });
+
+    _.p(t);
+    _.p("");
+
+    total_time();
+}
+
+exports.run = run;
+

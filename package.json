@@ -1,0 +1,28 @@
+{
+    "name": "fstats",
+    "description": "A simple file tree stats program",
+    "version": "1.0.0",
+    "main":"./lib/index.js",
+    "author": {
+        "name": "Kendrick Taylor",
+        "email": "kendrick@circuitsix.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/sktaylor/fstats.git"
+    },
+    "directories": {
+        "lib": "./lib"
+    },
+    "bin" : { "fstats" : "./bin/fstats" },
+    "devDependencies": {
+        "dry-test": "0.1.6"
+    },
+    "dependencies": {
+          "tamejs" : ""
+        , "dry-underscore" : ""
+        , "text-table" : ""
+        , "cli-color" : ""
+    }
+}
+

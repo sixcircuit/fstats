@@ -1,0 +1,14 @@
+
+from subprocess import call
+
+def _call(cmd):
+    return call(cmd.split())
+
+def _shell(cmd):
+    return call(cmd, shell = True)
+
+def test(args):
+    return _call('./node_modules/dry-test/bin/dry-test ' + " ".join(args))
+
+def default(args):
+    return test(args)

@@ -1,0 +1,9 @@
+node_modules
+*.pyc
+.*.js
+.vagrant
+.*.tjs.*.cache
+.DS_Store
+keys/
+ignore
+.fstats.json
