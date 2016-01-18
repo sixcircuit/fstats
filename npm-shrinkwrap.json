@@ -1,6 +1,6 @@
 {
   "name": "fstats",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "dependencies": {
     "cli-color": {
       "version": "1.1.0",
