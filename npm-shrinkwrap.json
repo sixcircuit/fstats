@@ -1,6 +1,6 @@
 {
   "name": "fstats",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "dependencies": {
     "cli-color": {
       "version": "1.1.0",
@@ -95,8 +95,8 @@
       }
     },
     "dry-underscore": {
-      "version": "0.16.1",
-      "from": "dry-underscore@0.16.1",
+      "version": "0.16.2",
+      "from": "dry-underscore@latest",
       "dependencies": {
         "formidable": {
           "version": "1.0.17",

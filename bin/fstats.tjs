@@ -2,7 +2,7 @@
 
 var _ = require("dry-underscore");
 var fstats = require('../lib');
-var table = require('text-table');
+var table_formatter = require('text-table');
 
 var color = require('cli-color');
 
@@ -43,69 +43,123 @@ function run(){
 
     var fs = fstats({ root: root, read_only: read_only });
 
-    await{ fs.compute(_.plumb(defer(var stats), _.exit)); }
+    await{ fs.compute(_.plumb(defer(var root_entry), _.exit)); }
 
-    var print_info = [
-        { key: "allocated", name: "size:" },
-        { key: "file_count", name: "files:" },
-        { key: "link_count", name: "links:" },
-        { key: "dir_count", name: "dirs:" },
-        { key: "files_per_dir", name: "files / dir:" },
-    ];
+    var table = [];
 
-    var header = ["", "current"];
+    add_root_data(root_entry, table);
 
-    var add_last_header = _.once(function(){ header.push("last"); header.push("change"); });
-    var add_max_header = _.once(function(){ header.push("max"); header.push("change"); });
+    add_child_data(root_entry, table);
 
-    var data = [];
+    print_data(table);
 
-    _.each(print_info, function(info, key){
-        var stat = stats[info.key];
+    var time = total_time(true);
 
-        var row = [info.name, stat.current.value.human];
+    if(time > 1000){
+        time /= 1000;
+        _.p("total time: ", _.decimals(time, 2, false) + " sec");
+    }else{
+        _.p("total time: ", _.decimals(time, 2, false) + " ms");
+    }
+}
 
-        if(stat.last_run !== null){
-            add_last_header();
+function add_last_header(header){
+    if(header.added_last){ return; }
+    header.added_last = true;
+    header.push("last");
+    header.push("change");
+}
 
-            row.push(stat.last_run.value.human);
+function add_max_header(header){
+    if(header.added_max){ return; }
+    header.added_max = true;
+    header.push("max");
+    header.push("change");
+};
 
-            if(stat.last_run.change.raw === 0){
-                row.push("0");
-            }else if(stat.last_run.change.raw > 0){
-                row.push(color.green(stat.last_run.change.human));
-            }else{
-                row.push(color.red(stat.last_run.change.human));
-            }
-        }
+function print_data(table){
 
-        if(stat.max_run !== null){
-            add_max_header();
-
-            row.push(stat.max_run.value.human);
-
-            if(stat.max_run.change.raw === 0){
-                row.push("0");
-            }else if(stat.max_run.change.raw > 0){
-                row.push(color.green(stat.max_run.change.human));
-            }else{
-                row.push(color.red(stat.max_run.change.human));
-            }
-        }
-
-        data.push(row);
-    });
-
-    data.unshift(header);
-    var t = table(data, { 
+    var t = table_formatter(table, { 
         align: [ 'l', 'r', 'r', 'r', 'r', 'r' ],
         stringLength: function(s) { return color.strip(s).length; }
     });
 
     _.p(t);
     _.p("");
+}
 
-    total_time();
+function add_root_data(root_entry, table){
+
+    var print_info = [
+        { key: "allocated", name: "size:" },
+        { key: "file_count", name: "files:" },
+        { key: "link_count", name: "links:" },
+        { key: "dir_count", name: "dirs:" },
+    ];
+
+    var root_data_header = ["", "current"];
+    var stats = root_entry.pretty_stats();
+
+    _.each(print_info, function(info, key){
+        var stat = stats[info.key];
+        add_stats_row(root_data_header, table, info.name, stat);
+    });
+    table.unshift(root_data_header);
+
+}
+
+function add_child_data(root_entry, table){
+
+    var child_data_header = ["", "current"];
+
+
+    var max_len = 0;
+    _.each(root_entry.children(), function(child){
+        max_len = _.max(max_len, child.name().length);
+    });
+
+    if(max_len > 0){ table.push([_.str.repeat("-", max_len)]); }
+
+    _.each(root_entry.children(), function(child){
+        add_stats_row(child_data_header, table, child.name(), child.pretty_stats()["allocated"]);
+    });
+    // child_data.unshift(child_data_header);
+
+}
+
+function add_stats_row(header, table, label, stat){
+
+    var row = [label, stat.current.value.human];
+
+    if(stat.last_run !== null){
+        add_last_header(header);
+
+        row.push(stat.last_run.value.human);
+
+        if(stat.last_run.change.raw === 0){
+            row.push("0");
+        }else if(stat.last_run.change.raw > 0){
+            row.push(color.green(stat.last_run.change.human));
+        }else{
+            row.push(color.red(stat.last_run.change.human));
+        }
+    }
+
+    if(stat.max_run !== null){
+        add_max_header(header);
+
+        row.push(stat.max_run.value.human);
+
+        if(stat.max_run.change.raw === 0){
+            row.push("0");
+        }else if(stat.max_run.change.raw > 0){
+            row.push(color.green(stat.max_run.change.human));
+        }else{
+            row.push(color.red(stat.max_run.change.human));
+        }
+    }
+
+    table.push(row);
 }
 
 exports.run = run;
