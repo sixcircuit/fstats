@@ -25,15 +25,25 @@ function run(){
 
     var print_help = false;
     var read_only = false;
+    var limit = false;
+    var limit_n = null;
 
     args = _.filter(args, function(arg){
         if(_.lc(arg) === "-h"){ print_help = true; }
         else if(_.lc(arg) === "-ro"){ read_only = true; }
+        else if(_.lc(arg) === "-n"){ limit = true; }
+        else if(limit && limit_n === null){ 
+            limit_n = _.n(arg);
+            if(limit_n === null){ 
+                _.stderr("-n takes an numeric argument. " + arg + " is not a number.");
+                print_help = true;
+            }
+        }
         else{ return(true); }
     });
 
     if(print_help){ 
-        _.stderr("usage: fstats [-h, -ro] [directory_name]");
+        _.stderr("usage: fstats [-h, -ro, -n [n]] [directory_name]");
         _.exit(1);
     }
 
@@ -49,7 +59,7 @@ function run(){
 
     add_root_data(root_entry, table);
 
-    add_child_data(root_entry, table);
+    add_child_data(root_entry, table, limit_n);
 
     print_data(table);
 
@@ -91,10 +101,10 @@ function print_data(table){
 function add_root_data(root_entry, table){
 
     var print_info = [
-        { key: "allocated", name: "size:" },
-        { key: "file_count", name: "files:" },
         { key: "link_count", name: "links:" },
         { key: "dir_count", name: "dirs:" },
+        { key: "file_count", name: "files:" },
+        { key: "allocated", name: "size:" },
     ];
 
     var root_data_header = ["", "current"];
@@ -108,19 +118,28 @@ function add_root_data(root_entry, table){
 
 }
 
-function add_child_data(root_entry, table){
+function add_child_data(root_entry, table, limit){
 
     var child_data_header = ["", "current"];
 
+    var children = root_entry.children();
+
+    children.sort(function(a, b){
+        if(a.stats().allocated > b.stats().allocated){ return(1); }
+        else if(a.stats().allocated < b.stats().allocated){ return(-1); }
+        else{ return(0); }
+    });
+
+    if(limit !== null){ children = _.last(children, limit); }
 
     var max_len = 0;
-    _.each(root_entry.children(), function(child){
+    _.each(children, function(child){
         max_len = _.max(max_len, child.name().length);
     });
 
     if(max_len > 0){ table.push([_.str.repeat("-", max_len)]); }
 
-    _.each(root_entry.children(), function(child){
+    _.each(children, function(child){
         add_stats_row(child_data_header, table, child.name(), child.pretty_stats()["allocated"]);
     });
     // child_data.unshift(child_data_header);
