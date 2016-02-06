@@ -51,6 +51,8 @@ function run(){
 
     if(args.length > 0){ root = _.last(args); }
 
+    root = _.path.resolve(root);
+
     var fs = fstats({ root: root, read_only: read_only });
 
     await{ fs.compute(_.plumb(defer(var root_entry), _.exit)); }
